@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time Series Adjustment UI - 2025</title>
+  <!-- Include Flatpickr CSS and JS for the date range picker -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 100px; }
+    .adjustment-table { width: 100%; margin-top: 10px; border-collapse: collapse; }
+    .adjustment-table th, .adjustment-table td { padding: 25px; text-align: center; border: 1px solid #ccc; vertical-align: top; }
+    .buttons { margin-top: 20px; }
+    .chart-container { margin-top: 50px; width: 100%; height: 300px; }
+    input[type="number"], input[type="text"] { width: 70px; }
+    select { width: 90px; }
+    /* Date Range Selector styling */
+    #dateRangeSelector {
+      margin-bottom: 20px;
+      margin-left: 25%;
+    }
+    #dateRangeInput {
+      width: 295px; /* Expanded width for better readability */
+      padding: 5px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Time Series Adjustment Interface - 2025</h1>
+  
+  <div>
+    <br>
+    <b style="margin-left: 25%; font-size: 1.2em;"><label>Measure Domain:</label></b>
+    <select id="measure-name" style="min-width: 250px;">
+      <option value="HEDIS">HEDIS</option>
+      <option value="HRA">HRA</option>
+      <option value="Pharmacy_MA">Pharmacy MA</option>
+      <option value="CAHPS_HOS">CAHPS_HOS</option>
+    </select>
+
+    <b style="margin-left: 25px; font-size: 1.2em;"><label>Measure Name:</label></b>
+    <select id="measure-name" style="min-width: 250px;">
+      <option value="C01">C01: Breast Cancer Screening</option>
+      <option value="C02">C02: Colorectal Cancer Screening</option>
+      <option value="C06">C06: COA - Medication review</option>
+      <option value="C07">C07: COA - Pain Screening</option>
+      <option value="C08">C08: Osteoporosis Management in Women who had a Fracture</option>
+      <option value="C09">C09: Diabetes Care – Eye Exam for Patients with Diabetes (EED)</option>
+      <option value="C10">C10: Glycemic Status Assessment for Patients With Diabetes (GSD)</option>
+      <option value="C11">C11: Controlling Blood Pressure</option>
+      <option value="C14">C14: Medication Reconciliation Post-Discharge</option>
+      <option value="C15">C15: All Cause Readmission</option>
+      <option value="C16">C16: Statin Therapy for Patients with Cardiovascular Disease</option>
+    </select>
+  </div>
+  <br>
+  <style>
+    #dateRangeSelector {
+      text-align: left;
+      margin-left: 0; /* Remove any left margin */
+    }
+  </style>
+  <br>
+  <!-- Date Range Selector -->
+  <div id="dateRangeSelector" style="text-align: left; margin-left: 0;">
+    <label style="font-size: 1.2em; margin-right: 10px; font-weight: bold;">Date Range Select:</label>
+    <input type="text" id="dateRangeInput" readonly>
+  </div>
+  
+  <br>
+  <b style="font-size: 1.2em;"><label>Global Adjustment Type:</label></b>
+  <br>
+  <br>
+  <label style="margin-right: 18px;">Numerator Adjustment Type:</label>
+  <select id="global-adjustment-type" style="min-width: 135px;">
+    <option value="percentage">% Change</option>
+    <option value="absolute">Absolute Change</option>
+  </select>
+  <input type="number" id="global-adjustment" placeholder="    ">
+  <small>Applied to all months unless overridden.</small>
+  <br>
+  <br>
+  <label>Denominator Adjustment Type:</label>
+  <select id="global-adjustment-type" style="min-width: 135px;">
+    <option value="percentage">% Change</option>
+    <option value="absolute">Absolute Change</option>
+  </select>
+  <input type="number" id="global-adjustment" placeholder="    ">
+  <small>Applied to all months unless overridden.</small>
+  <br>
+  <br>
+  <div class="buttons">
+    <button>Apply</button>
+    <button>Reset</button>
+    <button>Clear All</button>
+  </div>
+
+  <!-- Numerator Graph and Table -->
+  <div class="chart-container">
+    <canvas id="numeratorChart"></canvas>
+  </div>
+  <table class="adjustment-table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Actual</th>
+        <th>Actual</th>
+        <th>Actual</th>
+        <th>Actual</th>
+        <th>Actual</th>
+        <th>Actual</th>
+        <th>Forecasted</th>
+        <th>Forecasted</th>
+        <th>Forecasted</th>
+        <th>Forecasted</th>
+        <th>Forecasted</th>
+        <th>Forecasted</th>
+      </tr>
+      <tr>
+        <th></th>
+        <th>Jan 2025</th>
+        <th>Feb 2025</th>
+        <th>Mar 2025</th>
+        <th>Apr 2025</th>
+        <th>May 2025</th>
+        <th>Jun 2025</th>
+        <th>Jul 2025</th>
+        <th>Aug 2025</th>
+        <th>Sep 2025</th>
+        <th>Oct 2025</th>
+        <th>Nov 2025</th>
+        <th>Dec 2025</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Numerator</strong></td>
+        <script>
+          const numeratorOriginal = [12, 18, 15, 22, 20, 26];
+          const numeratorForecasted = [25, 28, 23, 29, 24, 30];
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          months.forEach((month, index) => {
+            let defaultValue = "";
+            let readonly = "";
+            let styleText = "text-align: right;";
+            if (index < 6) {
+              defaultValue = numeratorOriginal[index];
+              readonly = "readonly";
+              styleText += " background-color: #f0f0f0;";
+              // For Actual columns, no select box.
+              document.write(`
+                <td>
+                  <br>
+                  <input type="number" class="value-input-1" data-index="${index}" placeholder="  " value="${defaultValue}" ${readonly} style="${styleText}">
+                </td>
+              `);
+            } else {
+              defaultValue = numeratorForecasted[index - 6];
+              document.write(`
+                <td>
+                  <select class="adjustment-type-1" data-index="${index}" style="min-width: 135px;">
+                    <option value="percentage">% Change</option>
+                    <option value="absolute">Absolute Change</option>
+                  </select>
+                  <br>
+                  <p>
+                  <input type="number" class="value-input-1" data-index="${index}" placeholder="  " value="${defaultValue}" style="${styleText}">
+                </td>
+              `);
+            }
+          });
+        </script>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Denominator Graph and Table -->
+  <div class="chart-container">
+    <canvas id="denomChart"></canvas>
+  </div>
+  <table class="adjustment-table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Actual</th>
+        <th>Actual</th>
+        <th>Actual</th>
+        <th>Actual</th>
+        <th>Actual</th>
+        <th>Actual</th>
+        <th>Forecasted</th>
+        <th>Forecasted</th>
+        <th>Forecasted</th>
+        <th>Forecasted</th>
+        <th>Forecasted</th>
+        <th>Forecasted</th>
+      </tr>
+      <tr>
+        <th></th>
+        <th>Jan 2025</th>
+        <th>Feb 2025</th>
+        <th>Mar 2025</th>
+        <th>Apr 2025</th>
+        <th>May 2025</th>
+        <th>Jun 2025</th>
+        <th>Jul 2025</th>
+        <th>Aug 2025</th>
+        <th>Sep 2025</th>
+        <th>Oct 2025</th>
+        <th>Nov 2025</th>
+        <th>Dec 2025</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Denominator</strong></td>
+        <script>
+          const denomOriginal = [15, 28, 25, 32, 30, 36];
+          const denomForecasted = [35, 48, 53, 49, 34, 50];
+          const months2 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          months2.forEach((month, index) => {
+            let defaultValue = "";
+            let readonly = "";
+            let styleText = "text-align: right;";
+            if (index < 6) {
+              defaultValue = denomOriginal[index];
+              readonly = "readonly";
+              styleText += " background-color: #f0f0f0;";
+              // For Actual columns, no select box.
+              document.write(`
+                <td>
+                  <br>
+                  <input type="number" class="value-input-2" data-index="${index}" placeholder="  " value="${defaultValue}" ${readonly} style="${styleText}">
+                </td>
+              `);
+            } else {
+              defaultValue = denomForecasted[index - 6];
+              document.write(`
+                <td>
+                  <select class="adjustment-type-2" data-index="${index}" style="min-width: 135px;">
+                    <option value="percentage">% Change</option>
+                    <option value="absolute">Absolute Change</option>
+                  </select>
+                  <br>
+                  <p>
+                  <input type="number" class="value-input-2" data-index="${index}" placeholder="  " value="${defaultValue}" style="${styleText}">
+                </td>
+              `);
+            }
+          });
+        </script>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Ratings Graph (unchanged) -->
+  <div class="chart-container">
+    <canvas id="ratingsChart"></canvas>
+  </div>
+
+  <script>
+    // Register a custom plugin to draw data labels on each point.
+    // For Numerator and Denom charts, skip drawing labels for datasets with 'Adjusted' in the label.
+    const dataLabelPlugin = {
+      id: 'dataLabelPlugin',
+      afterDatasetsDraw: function(chart, easing) {
+        const ctx = chart.ctx;
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+          if ((chart.canvas.id === 'numeratorChart' || chart.canvas.id === 'denomChart') && dataset.label.includes('Adjusted')) {
+            return;
+          }
+          const meta = chart.getDatasetMeta(datasetIndex);
+          meta.data.forEach((element, index) => {
+            const value = dataset.data[index];
+            if (value === null || value === undefined) return;
+            const position = element.tooltipPosition();
+            ctx.font = '12px Arial';
+            ctx.fillStyle = 'black';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(value, position.x, position.y - 5);
+          });
+        });
+      }
+    };
+    Chart.register(dataLabelPlugin);
+
+    // Initialize the date range picker using Flatpickr
+    flatpickr("#dateRangeInput", {
+      mode: "range",
+      dateFormat: "F j, Y",
+      defaultDate: [new Date(2025, 0, 1), new Date(2025, 3, 31)],
+      onChange: function(selectedDates, dateStr, instance) {
+        console.log("Selected date range: " + dateStr);
+        if (selectedDates.length === 2) {
+          let startDate = selectedDates[0];
+          let endDate = selectedDates[1];
+          let monthsDiff = (endDate.getFullYear() - startDate.getFullYear()) * 12 +
+                           (endDate.getMonth() - startDate.getMonth()) + 1;
+          instance.set('showMonths', monthsDiff);
+          instance.redraw();
+        }
+      }
+    });
+
+    // Common configuration
+    const commonOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { beginAtZero: true },
+        y: { beginAtZero: true }
+      }
+    };
+
+    const monthsLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    // Numerator Chart
+    const numeratorCtx = document.getElementById('numeratorChart').getContext('2d');
+    new Chart(numeratorCtx, {
+      type: 'line',
+      data: {
+        labels: monthsLabels,
+        datasets: [
+          {
+            label: 'Numerator Original Time Series (2025)',
+            data: [12, 18, 15, 22, 20, 26, null, null, null, null, null, null],
+            borderColor: 'green',
+            fill: false,
+            spanGaps: false
+          },
+          {
+            label: 'Numerator Forecasted Time Series (2025)',
+            data: [null, null, null, null, null, 26, 25, 28, 23, 29, 24, 30],
+            borderColor: 'blue',
+            fill: false,
+            spanGaps: false
+          },
+          {
+            label: 'Numerator Adjusted Time Series (2025)',
+            data: [12, 18, 15, 22, 20, 26, 27, 25, 28, 26, 31, 40],
+            borderColor: 'red',
+            borderDash: [5, 5],
+            fill: false
+          }
+        ]
+      },
+      options: Object.assign({}, commonOptions, {
+        plugins: {
+          legend: { position: 'top' },
+          title: { display: true, text: 'Numerator Time Series (2025)' },
+          tooltip: { enabled: false }
+        }
+      })
+    });
+
+    // Denominator Chart
+    const denomCtx = document.getElementById('denomChart').getContext('2d');
+    new Chart(denomCtx, {
+      type: 'line',
+      data: {
+        labels: monthsLabels,
+        datasets: [
+          {
+            label: 'Denominator Original Time Series (2025)',
+            data: [15, 28, 25, 32, 30, 36, null, null, null, null, null, null],
+            borderColor: 'green',
+            fill: false,
+            spanGaps: false
+          },
+          {
+            label: 'Denominator Forecasted Time Series (2025)',
+            data: [null, null, null, null, null, 36, 35, 48, 53, 49, 34, 50],
+            borderColor: 'blue',
+            fill: false,
+            spanGaps: false
+          },
+          {
+            label: 'Denominator Adjusted Time Series (2025)',
+            data: [null, null, null, null, null, 36, 37, 35, 39, 34, 42, 48],
+            borderColor: 'red',
+            borderDash: [5, 5],
+            fill: false
+          }
+        ]
+      },
+      options: Object.assign({}, commonOptions, {
+        plugins: {
+          legend: { position: 'top' },
+          title: { display: true, text: 'Denominator Time Series (2025)' },
+          tooltip: { enabled: false }
+        }
+      })
+    });
+
+    // Ratings Chart
+    const possibleRatings = [3.0, 3.5, 4.0, 4.5, 5.0];
+    const ratingsData = monthsLabels.map(() => possibleRatings[Math.floor(Math.random() * possibleRatings.length)]);
+    const ratingsCtx = document.getElementById('ratingsChart').getContext('2d');
+    new Chart(ratingsCtx, {
+      type: 'line',
+      data: {
+        labels: monthsLabels,
+        datasets: [
+          {
+            label: 'Ratings (2025)',
+            data: ratingsData,
+            borderColor: 'orange',
+            fill: false
+          }
+        ]
+      },
+      options: Object.assign({}, commonOptions, {
+        plugins: {
+          legend: { position: 'top' },
+          title: { display: true, text: 'Ratings (2025)' },
+          tooltip: { enabled: false }
+        }
+      })
+    });
+
+    // Existing adjustment type logic (if needed)
+    document.querySelectorAll('.adjustment-type').forEach(select => {
+      select.addEventListener('change', (event) => {
+        const index = event.target.getAttribute('data-index');
+        const inputField = document.querySelector(`.adjustment-input[data-index="${index}"]`);
+        if (event.target.value === 'percentage') {
+          inputField.type = 'text';
+          inputField.placeholder = '% Change';
+        } else {
+          inputField.type = 'number';
+          inputField.placeholder = 'Absolute Change';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
